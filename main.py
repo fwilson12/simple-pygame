@@ -4,19 +4,15 @@ import pygame, random
 
 from sys import exit
 
-# Necessary Step! Initiates all of the parts of the Pygame library.
 pygame.init()
 
-# Create Screen - a display surface
 screen_width = 800
 screen_height = 500
 screen = pygame.display.set_mode((screen_width,screen_height))
 
-# Add a label to the pygame window
-pygame.display.set_caption("Intro to Pygame: Platform Game")
+pygame.display.set_caption("Coin Hunter")
 
-# Create Clock object - responsible for controlling the games frame rate
-clock = pygame.time.Clock() # create a clock object
+clock = pygame.time.Clock() 
 
 
 class Background(pygame.sprite.Sprite):
@@ -28,80 +24,111 @@ class Background(pygame.sprite.Sprite):
 		self.image = pygame.image.load(image_path)
 		self.rect = self.image.get_rect(center = (self.x, self.y))
 
-	def move_right(self):
-		if self.rect.centerx > 1200:
-			self.x = -400
-			self.rect.centerx = self.x
-		self.x += self.speed
-		self.rect.centerx = self.x
-
-	def move_left(self):
-		if self.rect.centerx < -400:
-			self.x = 1200
-			self.rect.center = (self.x,self.y)
-		self.x -= self.speed
-		self.rect.center = (self.x,self.y)
 
 class Player(pygame.sprite.Sprite):
 	def __init__(self,x,y):
 		super(Player,self).__init__()
-		self.moveY = 0
+
 		self.x = x
 		self.y = y
 		self.index = 0
 		self.direction = "right"
-		self.right_files = ["ye right.png"]
-		self.right_images = [pygame.image.load(filename).convert_alpha() for filename in self.right_files]
 		self.pics = [[pygame.image.load("ye straight 2.png")],[pygame.transform.flip(img, True, False) for img in self.right_images], [pygame.image.load(filename).convert_alpha() for filename in self.right_files]]
-		self.image = self.pics[2][0]
+		self.image = self.pics[0][0]
 		self.rect = self.image.get_rect(center = (self.x, self.y))
 
 
 	def move_right(self):
 		self.direction = "right"
-		self.image = self.pics[2][0]
-		self.rect.center = (self.x,self.y)
+		self.image = self.pics[1][0]
 	def move_left(self):
 		self.direction = "left"
-		self.image = self.pics[1][0]
-		self.rect.center = (self.x,self.y)
-	def stand(self):
+		self.image = self.pics[3][0]
+	def move_up(self):
+		self.direction = "up"
+		self.image = self.pics[2][0]
+	def move_down(self):
+		self.direction = "down"
+		self.image = self.pics[4][0]
+	def still(self):
 		self.image = self.pics[0][0]
+	def collision_multi(self, others):
+		if pygame.sprite.spritecollide(self, others, False):
+			return True
+	def collision_singular(self, coin):
+		if self.rect.colliderect(coin.rect):
+			return True
+		
 	
 
+
+
+class Blocks(pygame.sprite.Sprite):
+	def init(self, x,y):
+		super(Blocks, self).__init__()
+
+		self.x = x
+		self.y = y
+		self.index = 0
+		self.pics = [pygame.image.load(), pygame.image.load()]
+		self.image = self.pics[0]
+		self.rect = self.image.get_rect(center = (self.x, self.y))
+
+	def flicker(self):
+		num = random.rantint(0,100)
+		if num <= 10:
+			self.index = (self.index +1)%2
+			self.image = self.pics[self.index]
+			self.rect.center = (self.x,self.y)
+
+class Coin(pygame.sprite.Sprite):
+	def init(self, x, y):
+		super(Coin, self).__init__()
+
+		self.x = x
+		self.y = y
+		self.index = 0
+		self.pics = [pygame.image.load(), pygame.image.load(), pygame.image.load()]
+		self.image = self.pics[0]
+		self.rect = self.image.get_rect(center = (self.x, self.y))
+	
+	def move(self):
+		deltax = random.choice[-2,-1,0,1,2]
+		deltay = random.choice[-2,-1,0,1,2]
+		
+		self.rect.centerx += deltax
+		self.rect.centery += deltay
 
 
 '''
 Groups
 '''
-background = pygame.sprite.Group() # Contains images of the blue sky and mountains
-background.add(Background("backgroud.jpg",-400,150, 4))
-background.add(Background("backgroud.jpg",400,150, 4))
+background = pygame.sprite.Group() 
 background.add(Background("backgroud.jpg",1200,150, 4))
 
 
-land = pygame.sprite.Group() # Contains the platform images that the player run/walks on
+land = pygame.sprite.Group() 
 land.add(Background("ground - Copy.png",325,425,8))
 land.add(Background("short_ground - Copy.png",1100,425,8))
 
-scenery = pygame.sprite.Group() # Contains both the background and platform images
+scenery = pygame.sprite.Group() 
 scenery.add(background)
 scenery.add(land)
 
 player = Player(200,100)
 
-all_sprites = pygame.sprite.Group() #contains all surfaces
+all_sprites = pygame.sprite.Group() 
 all_sprites.add(scenery)
 all_sprites.add(player)
 
 while True:
-	#Event loop - Looks for for user input which could include: key presses, mouse movement, mouse clicks, etc.
+	
 	for event in pygame.event.get():
-		# Close game if the red square in the top left of the window is clicked
+	
 		if event.type == pygame.QUIT:
 			pygame.quit()
 			exit()
-		# Actions that the player takes when the user lifts finger from keys
+		
 		if event.type == pygame.KEYUP:
 			if event.key == pygame.K_RIGHT:
 				player.stand()
@@ -109,7 +136,7 @@ while True:
 				player.stand()
 			if event.key == pygame.K_UP:
 				player.stand()
-	# Actions that the player and scenery take when the user presses particular keys	
+	
 	keys = pygame.key.get_pressed()
 	if keys[pygame.K_RIGHT]:
 		for s in scenery:
