@@ -94,7 +94,7 @@ class Coin(pygame.sprite.Sprite):
 	
 	def move(self):
 		deltax = random.choice[-2,-1,0,1,2]
-		deltay = random.choice[-2,-1,0,1,2]
+		deltay = random.choice[-2,-1,0,1,2,3]
 		
 		self.rect.centerx += deltax
 		self.rect.centery += deltay
