@@ -1,28 +1,20 @@
 # Import the pygame library
 from pygame import mixer
 import pygame, random
-
+from pygame.locals import *
 from sys import exit
 
 pygame.init()
 
-screen_width = 800
-screen_height = 500
+screen_width = 1400
+screen_height = 800
+bg = pygame.image.load("background.png")
 screen = pygame.display.set_mode((screen_width,screen_height))
 
 pygame.display.set_caption("Coin Hunter")
 
 clock = pygame.time.Clock() 
 
-
-class Background(pygame.sprite.Sprite):
-	def __init__(self, image_path, x, y, speed):
-		super().__init__()
-		self.x = x
-		self.y = y
-		self.speed = speed
-		self.image = pygame.image.load(image_path)
-		self.rect = self.image.get_rect(center = (self.x, self.y))
 
 
 class Player(pygame.sprite.Sprite):
@@ -31,27 +23,32 @@ class Player(pygame.sprite.Sprite):
 
 		self.x = x
 		self.y = y
+		self.coins = 0 
 		self.index = 0
 		self.direction = "right"
-		self.pics = [[pygame.image.load("ye straight 2.png")],[pygame.transform.flip(img, True, False) for img in self.right_images], [pygame.image.load(filename).convert_alpha() for filename in self.right_files]]
-		self.image = self.pics[0][0]
+		self.pics = [pygame.image.load("kanye still.png"), pygame.image.load("kanye right.png"), pygame.image.load("kanye left.png"), pygame.image.load("kanye up.png"), pygame.image.load("kanye down.png")]
+		self.image = self.pics[0]
 		self.rect = self.image.get_rect(center = (self.x, self.y))
 
 
 	def move_right(self):
 		self.direction = "right"
-		self.image = self.pics[1][0]
+		self.rect.x += 5
+		self.image = self.pics[1]
 	def move_left(self):
 		self.direction = "left"
-		self.image = self.pics[3][0]
+		self.rect.x -= 5
+		self.image = self.pics[2]
 	def move_up(self):
 		self.direction = "up"
-		self.image = self.pics[2][0]
+		self.rect.y -= 5
+		self.image = self.pics[3]
 	def move_down(self):
 		self.direction = "down"
-		self.image = self.pics[4][0]
+		self.rect.y += 5
+		self.image = self.pics[4]
 	def still(self):
-		self.image = self.pics[0][0]
+		self.image = self.pics[0]
 	def collision_multi(self, others):
 		if pygame.sprite.spritecollide(self, others, False):
 			return True
@@ -64,98 +61,93 @@ class Player(pygame.sprite.Sprite):
 
 
 class Blocks(pygame.sprite.Sprite):
-	def init(self, x,y):
+	def __init__(self, x, y, orientation):
 		super(Blocks, self).__init__()
-
+		
+		self.orientation = orientation
 		self.x = x
 		self.y = y
 		self.index = 0
-		self.pics = [pygame.image.load(), pygame.image.load()]
-		self.image = self.pics[0]
+		self.pics = [pygame.image.load("red one.png"), pygame.image.load("red two.png"), pygame.image.load("yellow one.png"), pygame.image.load("yellow two.png")]
+		if self.orientation == 'vertical':
+			self.image = self.pics[0]
+		elif self.orientation == 'horizontal':
+			self.image = self.pics[1]
 		self.rect = self.image.get_rect(center = (self.x, self.y))
 
 	def flicker(self):
-		num = random.rantint(0,100)
-		if num <= 10:
-			self.index = (self.index +1)%2
-			self.image = self.pics[self.index]
-			self.rect.center = (self.x,self.y)
+		num = random.randint(0,100)
+		if self.orientation == 'vertical':
+			if num <= 5:
+				self.index = random.choice([0,2])
+				self.image = self.pics[self.index]
+				self.rect.center = (self.x,self.y)
+		elif self.orientation == 'horizontal':
+			if num <= 5:
+				self.index = random.choice([1,3])
+				self.image = self.pics[self.index]
+				self.rect.center = (self.x,self.y)
+
 
 class Coin(pygame.sprite.Sprite):
-	def init(self, x, y):
+	def __init__(self, x, y):
 		super(Coin, self).__init__()
 
 		self.x = x
 		self.y = y
 		self.index = 0
-		self.pics = [pygame.image.load(), pygame.image.load(), pygame.image.load()]
+		self.pics = [pygame.image.load('golden 1.png'), pygame.image.load('golden 2.png')]
 		self.image = self.pics[0]
 		self.rect = self.image.get_rect(center = (self.x, self.y))
 	
 	def move(self):
-		deltax = random.choice[-2,-1,0,1,2]
-		deltay = random.choice[-2,-1,0,1,2,3]
+		deltax = random.choice([-2,-1,0,1,2])
+		deltay = random.choice([-2,-1,0,1,2])
 		
 		self.rect.centerx += deltax
 		self.rect.centery += deltay
+	def relocate(self):
+		pass
 
 
-'''
-Groups
-'''
-background = pygame.sprite.Group() 
-background.add(Background("backgroud.jpg",1200,150, 4))
+yeezy = Player(screen_width // 2, screen_height // 2)
 
+players = pygame.sprite.Group()
+players.add(yeezy)
 
-land = pygame.sprite.Group() 
-land.add(Background("ground - Copy.png",325,425,8))
-land.add(Background("short_ground - Copy.png",1100,425,8))
-
-scenery = pygame.sprite.Group() 
-scenery.add(background)
-scenery.add(land)
-
-player = Player(200,100)
-
-all_sprites = pygame.sprite.Group() 
-all_sprites.add(scenery)
-all_sprites.add(player)
 
 while True:
 	
 	for event in pygame.event.get():
-	
 		if event.type == pygame.QUIT:
 			pygame.quit()
 			exit()
-		
-		if event.type == pygame.KEYUP:
-			if event.key == pygame.K_RIGHT:
-				player.stand()
-			if event.key == pygame.K_LEFT:
-				player.stand()
-			if event.key == pygame.K_UP:
-				player.stand()
+		elif event.type == pygame.KEYUP:
+			if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT or event.key == pygame.K_UP or event.key == pygame.K_DOWN:
+				yeezy.still()
+
+	
+	
 	
 	keys = pygame.key.get_pressed()
-	if keys[pygame.K_RIGHT]:
-		for s in scenery:
-			s.move_left()
-		player.move_right()	
+
 	if keys[pygame.K_LEFT]:
-		for s in scenery:
-			s.move_right()
-		player.move_left()
+		yeezy.move_left()
+	if keys[pygame.K_RIGHT]:
+		yeezy.move_right()
+	if keys[pygame.K_UP]:
+		yeezy.move_up()
+	if keys[pygame.K_DOWN]:
+		yeezy.move_down()
+
+
+	
+	screen.blit(bg, (0,0))
+	if yeezy in players:
+		players.draw(screen)
 	
 
-
-	# The player falls if it is not touch a platform
 	
-
-    # Blits all surfaces to screen
-	all_sprites.draw(screen)
-
-	# Updates all of the images and objects on the screen (display surface)
 	pygame.display.update()
 
 	clock.tick(60)
