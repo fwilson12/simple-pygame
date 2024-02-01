@@ -18,12 +18,12 @@ clock = pygame.time.Clock()
 
 
 class Player(pygame.sprite.Sprite):
-	def __init__(self,x,y):
+	def __init__(self,x,y, score):
 		super(Player,self).__init__()
 
 		self.x = x
 		self.y = y
-		self.coins = 0 
+		self.score = score
 		self.index = 0
 		self.direction = "right"
 		self.pics = [pygame.image.load("kanye still.png"), pygame.image.load("kanye right.png"), pygame.image.load("kanye left.png"), pygame.image.load("kanye up.png"), pygame.image.load("kanye down.png")]
@@ -31,38 +31,55 @@ class Player(pygame.sprite.Sprite):
 		self.rect = self.image.get_rect(center = (self.x, self.y))
 
 
-	def move_right(self):
-		self.direction = "right"
-		self.rect.x += 5
+	def move_right(self, deltax):
+		
+		if self.rect.right>1396:
+			deltax = -4
+		self.rect.x += deltax
 		self.image = self.pics[1]
-	def move_left(self):
-		self.direction = "left"
-		self.rect.x -= 5
+	
+	def move_left(self, deltax):
+		if self.rect.left < 4:
+			deltax = 4
+		self.rect.x += deltax
 		self.image = self.pics[2]
-	def move_up(self):
-		self.direction = "up"
-		self.rect.y -= 5
+	
+	def move_up(self, deltay):
+		if self.rect.top < 4:
+			deltay = 4
+		self.rect.y += deltay
 		self.image = self.pics[3]
-	def move_down(self):
-		self.direction = "down"
-		self.rect.y += 5
+	
+	def move_down(self, deltay):
+		if self.rect.bottom>796:
+			deltay = -4
+		self.rect.y += deltay
 		self.image = self.pics[4]
+	
 	def still(self):
 		self.image = self.pics[0]
+	
 	def collision_multi(self, others):
 		if pygame.sprite.spritecollide(self, others, False):
 			return True
+	
 	def collision_singular(self, coin):
 		if self.rect.colliderect(coin.rect):
 			return True
+	def display_score(self):
+		font = pygame.font.SysFont(None, 55)
+		text = font.render("Coins: "+str(self.score), True, 'blue', 'white')
+		screen.blit(text, (1200, 750))
+		pygame.display.flip()
+		
 		
 	
 
 
 
-class Blocks(pygame.sprite.Sprite):
+class Block(pygame.sprite.Sprite):
 	def __init__(self, x, y, orientation):
-		super(Blocks, self).__init__()
+		super(Block, self).__init__()
 		
 		self.orientation = orientation
 		self.x = x
@@ -73,7 +90,7 @@ class Blocks(pygame.sprite.Sprite):
 			self.image = self.pics[0]
 		elif self.orientation == 'horizontal':
 			self.image = self.pics[1]
-		self.rect = self.image.get_rect(center = (self.x, self.y))
+		self.rect = self.image.get_rect(topleft = (self.x, self.y))
 
 	def flicker(self):
 		num = random.randint(0,100)
@@ -81,12 +98,12 @@ class Blocks(pygame.sprite.Sprite):
 			if num <= 5:
 				self.index = random.choice([0,2])
 				self.image = self.pics[self.index]
-				self.rect.center = (self.x,self.y)
+				self.rect.topleft = (self.x,self.y)
 		elif self.orientation == 'horizontal':
 			if num <= 5:
 				self.index = random.choice([1,3])
 				self.image = self.pics[self.index]
-				self.rect.center = (self.x,self.y)
+				self.rect.topleft = (self.x,self.y)
 
 
 class Coin(pygame.sprite.Sprite):
@@ -98,22 +115,46 @@ class Coin(pygame.sprite.Sprite):
 		self.index = 0
 		self.pics = [pygame.image.load('golden 1.png'), pygame.image.load('golden 2.png')]
 		self.image = self.pics[0]
+		self.deltax = random.choice([-2,2])
+		self.deltay = random.choice([-2,2])
 		self.rect = self.image.get_rect(center = (self.x, self.y))
 	
 	def move(self):
-		deltax = random.choice([-2,-1,0,1,2])
-		deltay = random.choice([-2,-1,0,1,2])
+		# print(self.deltax, self.deltay)
+		if self.rect.left <= 2 or self.rect.right >= 1398:
+			self.deltax *= -1
+		if self.rect.top <= 2 or self.rect.bottom >= 798:
+			self.deltay *= -1
 		
-		self.rect.centerx += deltax
-		self.rect.centery += deltay
+		self.rect.centerx += self.deltax
+		self.rect.centery += self.deltay
+		
+		if random.randint(0,100) <= 4:
+			self.index = (self.index +1)%2
+		self.image = self.pics[self.index]
+		# self.rect.center = (self.x,self.y)
+
+
 	def relocate(self):
-		pass
+		self.rect.x, self.rect.y = random.randint(600,1300),random.randint(30, 700)
 
 
-yeezy = Player(screen_width // 2, screen_height // 2)
+yeezy = Player(80, 150, 0)
 
 players = pygame.sprite.Group()
 players.add(yeezy)
+
+
+
+coins = pygame.sprite.Group()
+for i in range(3):
+	coins.add(Coin(random.randint(600,1300),random.randint(100,700)))
+
+blocks = pygame.sprite.Group()
+blocks.add(Block(600,0, 'vertical'))
+blocks.add(Block(600,300, 'vertical'))
+blocks.add(Block(750,450, 'horizontal'))
+
 
 
 while True:
@@ -132,20 +173,38 @@ while True:
 	keys = pygame.key.get_pressed()
 
 	if keys[pygame.K_LEFT]:
-		yeezy.move_left()
+		yeezy.move_left(-4)
 	if keys[pygame.K_RIGHT]:
-		yeezy.move_right()
+		yeezy.move_right(4)
 	if keys[pygame.K_UP]:
-		yeezy.move_up()
+		yeezy.move_up(-4)
 	if keys[pygame.K_DOWN]:
-		yeezy.move_down()
-
+		yeezy.move_down(4)
 
 	
 	screen.blit(bg, (0,0))
+	
+	
+	for block in blocks:
+		block.flicker()
+	blocks.draw(screen)
+
+	for coin in coins:
+		coin.move()
+	coins.draw(screen)
+	
+	
 	if yeezy in players:
 		players.draw(screen)
+		yeezy.display_score()
+		
+	if yeezy.collision_multi(blocks) == True:
+		yeezy.kill()
 	
+	for coin in coins:
+		if yeezy.collision_singular(coin) == True:
+			coin.relocate()
+			yeezy.score +=1
 
 	
 	pygame.display.update()
