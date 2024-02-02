@@ -11,7 +11,7 @@ screen_height = 800
 bg = pygame.image.load("background.png")
 screen = pygame.display.set_mode((screen_width,screen_height))
 
-pygame.display.set_caption("Coin Hunter")
+pygame.display.set_caption("Kanye West tries his Kanye Best to secure flying coins by making a Kanye Catch")
 
 clock = pygame.time.Clock() 
 
@@ -71,6 +71,18 @@ class Player(pygame.sprite.Sprite):
 		text = font.render("Coins: "+str(self.score), True, 'blue', 'white')
 		screen.blit(text, (1200, 750))
 		pygame.display.flip()
+	def yay_you_win(self):
+		font = pygame.font.SysFont(None, 55)
+		text = font.render("congrats dude you got a lot of coins and won this little game.", True, 'white', 'blue')
+		screen.blit(text, (150, screen_height // 2 - text.get_height()))
+		pygame.display.flip()
+		pygame.time.delay(2000)
+	def boo_you_lose(self):
+		font = pygame.font.SysFont(None, 55)
+		text = font.render(" you died man you hit the block when you probably should not have.", True, 'white', 'red')
+		screen.blit(text, (50, screen_height // 2 - text.get_height()))
+		pygame.display.flip()
+		pygame.time.delay(2000)
 		
 		
 	
@@ -152,10 +164,13 @@ for i in range(3):
 
 blocks = pygame.sprite.Group()
 blocks.add(Block(600,0, 'vertical'))
-blocks.add(Block(600,300, 'vertical'))
-blocks.add(Block(750,450, 'horizontal'))
-
-
+blocks.add(Block(600,150, 'vertical'))
+blocks.add(Block(650,300, 'horizontal'))
+blocks.add(Block(0,700, 'horizontal'))
+blocks.add(Block(500,300, 'horizontal'))
+blocks.add(Block(1200,0, 'vertical'))
+blocks.add(Block(-80,340, 'horizontal'))
+blocks.add(Block(1170,600, 'horizontal'))
 
 while True:
 	
@@ -200,11 +215,14 @@ while True:
 		
 	if yeezy.collision_multi(blocks) == True:
 		yeezy.kill()
+		yeezy.boo_you_lose()
 	
 	for coin in coins:
 		if yeezy.collision_singular(coin) == True:
 			coin.relocate()
 			yeezy.score +=1
+	if yeezy.score == 25:
+		yeezy.yay_you_win()
 
 	
 	pygame.display.update()
